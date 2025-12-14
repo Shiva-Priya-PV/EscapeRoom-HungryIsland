@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Hungry Island | Escape Room</title>
+    <style>
+        /* --- CSS STYLING --- */
+        :root {
+            --bg-color: #050505;
+            --text-color: #e0e0e0;
+            --accent-red: #8a0303;
+            --accent-gold: #c5a059;
+            --container-bg: rgba(20, 20, 20, 0.95);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            color: var(--text-color);
+            font-family: 'Times New Roman', Times, serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            background: var(--container-bg);
+            padding: 40px;
+            border: 2px solid var(--accent-red);
+            box-shadow: 0 0 20px rgba(138, 3, 3, 0.5);
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: var(--accent-red);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        h2 {
+            color: var(--accent-gold);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        p, li {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        /* Image Styling */
+        .scene-img {
+            max-width: 100%;
+            max-height: 400px;
+            width: auto;
+            border: 1px solid #333;
+            box-shadow: 0 0 15px #000;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        /* Buttons & Options */
+        .btn {
+            background: transparent;
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-family: 'Times New Roman', Times, serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background: var(--accent-red);
+            color: #fff;
+            box-shadow: 0 0 15px var(--accent-red);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .option-btn {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #ccc;
+            padding: 15px;
+            cursor: pointer;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .option-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Hint Box - Initially Hidden */
+        .hint-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(46, 204, 113, 0.1); /* Slight green tint for help */
+            border-left: 4px solid #2ecc71;
+            color: #abebc6;
+            font-style: italic;
+            display: none; 
+            animation: fadeIn 0.5s;
+        }
+
+        /* Penalty Box - Appears on wrong answer */
+        .penalty-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(138, 3, 3, 0.3);
+            border: 1px solid var(--accent-red);
+            color: #ffcccc;
+            font-weight: bold;
+            display: none;
+            animation: pulse 1s infinite alternate;
+        }
+
+        .timer {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 0 5px var(--accent-red); }
+            to { box-shadow: 0 0 15px var(--accent-red); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        /* Ending Text Specifics */
+        .ending-quote {
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--accent-gold);
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="horror_music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="game-container">
+        
+        <div id="intro-screen">
+            <h1>The Hungry Island</h1>
+            <img src="img1.jpg" alt="Intro Image" class="scene-img">
+            
+            <h2>Survival Instructions</h2>
+            <div style="text-align: left; padding: 0 20px;">
+                <ul>
+                    <li>You have <strong>10 Minutes</strong> to escape.</li>
+                    <li>There are <strong>7 Questions</strong> to solve.</li>
+                    <li><strong>BE CAREFUL:</strong> If you choose the wrong path, you must hide.</li>
+                    <li>A wrong answer will <strong>lock you out for 1 Minute</strong>.</li>
+                    <li>Hints only appear after the penalty time is over.</li>
+                </ul>
+            </div>
+
+            <button class="btn" onclick="startGame()">Enter The Island</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <div class="timer" id="timer-display">10:00</div>
+            
+            <h2 id="question-number">Question 1</h2>
+            
+            <img id="question-image" src="" alt="Puzzle Image" class="scene-img fade-in">
+            
+            <p id="question-text" class="fade-in"></p>
+            
+            <div id="options-container" class="options-grid fade-in">
+                </div>
+
+            <div id="penalty-display" class="penalty-box"></div>
+
+            <div id="hint-display" class="hint-box"></div>
+        </div>
+
+        <div id="end-screen" class="hidden">
+            <h1>You survived...</h1>
+            <div class="ending-quote fade-in">
+                "Every path upward ends in watching Not moving.<br>
+                I am not the start,<br>
+                But I end all climbs."
+            </div>
+            <p style="margin-top:20px; color: #888;">The Hungry Island releases you.</p>
+        </div>
+
+        <div id="timeout-screen" class="hidden">
+            <h1 style="color: #444;">Time is Up</h1>
+            <p>The shadows have overtaken you. You remain on the island forever.</p>
+            <button class="btn" onclick="location.reload()">Try Again</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- GAME DATA ---
+        const questions = [
+            {
+                id: 1,
+                img: "img2.jpg",
+                text: "You reach the island and see three paths. Only one is safe. A board says:<br>“Choose the path that survivors take.”<br>Which path do you choose?",
+                options: [
+                    "A. Path with skeletons",
+                    "B. Path with fresh footprints",
+                    "C. Path with no footprints",
+                    "D. Path with animal bones"
+                ],
+                answer: 1, // B
+                hint: "Hint: Someone alive walked here recently..."
+            },
+            {
+                id: 2,
+                img: "img3.jpg",
+                text: "You find a locked door with a code. The clue says:<br>“Hungry Island has 3 tribes. Each tribe eats every 2 days. After 6 days, how many meals?”",
+                options: [
+                    "A. 3",
+                    "B. 6",
+                    "C. 9",
+                    "D. 12"
+                ],
+                answer: 2, // C
+                hint: "Hint: Multiply smaller numbers. (3 tribes * 3 meals each)"
+            },
+            {
+                id: 3,
+                img: "img4.jpg",
+                text: "A message says:<br>“Only even-numbered rocks are safe. The sum of rock numbers is 26.”<br>Which pair is safe?",
+                options: [
+                    "A. 12 & 14",
+                    "B. 10 & 4",
+                    "C. 8 & 2",
+                    "D. 7 & 5"
+                ],
+                answer: 0, // A
+                hint: "Hint: Sum = Add. Look for the sum that equals 26."
+            },
+            {
+                id: 4,
+                img: "img5.jpg",
+                text: "You find three idols: Idol of Teeth, Idol of Fire, Idol of Smoke.<br>A prophecy says: “Choose the one that saves you from hungry peoples”",
+                options: [
+                    "A. Teeth",
+                    "B. Fire",
+                    "C. Smoke",
+                    "D. All of them"
+                ],
+                answer: 1, // B
+                hint: "Hint: Choose the one that burns anything."
+            },
+            {
+                id: 5,
+                img: "img6.jpg",
+                text: "A cannibal island trap has three possible triggers: A feather, a stone, and a bone.<br>Clue says: “Pick the object they worship”",
+                options: [
+                    "A. Feather",
+                    "B. Stone",
+                    "C. Bone",
+                    "D. None"
+                ],
+                answer: 2, // C
+                hint: "Hint: Not a stone. Think remains."
+            },
+            {
+                id: 6,
+                img: "img7.jpg",
+                text: "A cannibal chant echoes: “Two shadows walk, but only one is alive.”<br>You see two shadows approaching. What should you do?",
+                options: [
+                    "A. Run toward them",
+                    "B. Light a fire",
+                    "C. Hide behind rocks",
+                    "D. Shout for help"
+                ],
+                answer: 2, // C
+                hint: "Hint: Don't reveal yourself."
+            },
+            {
+                id: 7,
+                img: "img8.jpg",
+                text: "A stone puzzle says: “Cannibals fear what they cannot see, but smell what is near.”<br>Which tool helps you avoid them?",
+                options: [
+                    "A. Torch",
+                    "B. Perfume",
+                    "C. Mud",
+                    "D. Sharp knife"
+                ],
+                answer: 2, // C
+                hint: "Hint: They find perfume smell. Mask your scent."
+            }
+        ];
+
+        // --- GAME VARIABLES ---
+        let currentQuestionIndex = 0;
+        let timeLeft = 600; // 10 minutes total
+        let timerInterval;
+        let penaltyInterval; // For the 1 min lockout
+        let isPenaltyActive = false;
+
+        // --- DOM ELEMENTS ---
+        const introScreen = document.getElementById('intro-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const timeoutScreen = document.getElementById('timeout-screen');
+        const audio = document.getElementById('bg-music');
+        
+        const qNumberEl = document.getElementById('question-number');
+        const qImgEl = document.getElementById('question-image');
+        const qTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const hintEl = document.getElementById('hint-display');
+        const penaltyEl = document.getElementById('penalty-display');
+        const timerEl = document.getElementById('timer-display');
+
+        // --- FUNCTIONS ---
+
+        function startGame() {
+            // Play Audio
+            audio.volume = 0.5;
+            audio.play().catch(error => {
+                console.log("Audio play failed: ", error);
+            });
+
+            // Switch Screens
+            introScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            // Initialize Game
+            currentQuestionIndex = 0;
+            loadQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                // Format Time MM:SS
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                if (seconds < 10) seconds = "0" + seconds;
+                
+                timerEl.textContent = `${minutes}:${seconds}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    clearInterval(penaltyInterval); // Stop any penalty timer too
+                    gameLost();
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            // Reset state for new question
+            hintEl.style.display = 'none';
+            penaltyEl.style.display = 'none';
+            optionsContainer.innerHTML = '';
+            isPenaltyActive = false;
+            
+            const q = questions[currentQuestionIndex];
+            
+            qNumberEl.textContent = `Question ${currentQuestionIndex + 1}`;
+            qImgEl.src = q.img;
+            qTextEl.innerHTML = q.text;
+
+            // Create Buttons
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (isPenaltyActive) return; // Prevent clicks during penalty
+
+            const currentQ = questions[currentQuestionIndex];
+
+            if (selectedIndex === currentQ.answer) {
+                // Correct Answer
+                btnElement.style.borderColor = "#2ecc71"; // Green
+                btnElement.style.color = "#2ecc71";
+                
+                setTimeout(() => {
+                    nextQuestion();
+                }, 500);
+            } else {
+                // Incorrect Answer -> TRIGGER PENALTY
+                btnElement.style.borderColor = "#8a0303"; // Red
+                btnElement.style.color = "#8a0303";
+                
+                startPenalty(currentQ.hint);
+            }
+        }
+
+        function startPenalty(hintText) {
+            isPenaltyActive = true;
+            let penaltyTime = 60; // 60 seconds delay
+            
+            // 1. Disable all buttons
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(btn => btn.disabled = true);
+
+            // 2. Show Penalty Message
+            penaltyEl.style.display = 'block';
+            penaltyEl.textContent = `WRONG CHOICE! The tribe is alerted. Hide for ${penaltyTime}s...`;
+
+            // 3. Start Countdown for Penalty
+            penaltyInterval = setInterval(() => {
+                penaltyTime--;
+                penaltyEl.textContent = `WRONG CHOICE! The tribe is alerted. Hide for ${penaltyTime}s...`;
+
+                if (penaltyTime <= 0) {
+                    clearInterval(penaltyInterval);
+                    endPenalty(hintText);
+                }
+            }, 1000);
+        }
+
+        function endPenalty(hintText) {
+            isPenaltyActive = false;
+            penaltyEl.style.display = 'none';
+
+            // 1. Show Hint (Only AFTER the 1 min is up)
+            hintEl.textContent = hintText;
+            hintEl.style.display = 'block';
+
+            // 2. Re-enable buttons (so they can try again)
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(btn => {
+                // Keep the clicked wrong ones red/disabled visually, but allow clicking others
+                if (btn.style.borderColor !== 'rgb(138, 3, 3)') { 
+                    btn.disabled = false; 
+                }
+            });
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                gameWon();
+            }
+        }
+
+        function gameWon() {
+            clearInterval(timerInterval);
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+        }
+
+        function gameLost() {
+            gameScreen.classList.add('hidden');
+            timeoutScreen.classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
